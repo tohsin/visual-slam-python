@@ -6,7 +6,12 @@ import numpy as np
 from typing import List
 import numpy
 import g2o
+import sys
 
+base_dir = os.getcwd()
+
+sys.path.insert(0, base_dir)
+from utils import plot_poses as PP
 class PoseGraphOptimization(g2o.SparseOptimizer):
     def __init__(self):
         super().__init__()
@@ -208,9 +213,24 @@ if __name__ == '__main__':
     for edge in edges:
         pose_graph_optimiser.add_edge(vertices=edge.getIDS() ,measurement=edge.getTPose(), information=edge.getInformationMatrix(),robust_kernel = g2o.RobustKernelHuber() )
 
+
+    pre_display_poses = []
+    for i in range(len(vertices)):
+        curr_pose = pose_graph_optimiser.get_pose(i)
+        t = curr_pose.t.reshape(3,1)
+        R = curr_pose.R 
+        T = np.block([
+            [R ,t],
+            [0, 0,0, 1]
+        ])
+        print(T)
+        pre_display_poses.append(curr_pose)
+        break
+    PP.display_poses(poses = pre_display_poses)
     # pose_graph_optimiser.optimize()
-    x = vertices[0].getTPose()
-    print(vertices[0].getTPose().R)
+
+    # x = vertices[0].getTPose()
+    # print(vertices[0].getTPose().R)
 
    
     

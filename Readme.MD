@@ -1,3 +1,10 @@
+# Visual Python (Concepts and Implimentation and Prototyping)
+This repo contains several concepts and implimentations of computer vision and visual slam algorithms for rapid prototyping for reserachers to test concepts.
+
+Some implientations are done with g2o for optimisatiion or Gauss newton non linear solver
+
+For solutions done with Gauss newton code runs very slowly as using the c++/python bind libraries are faster
+***
 # Cretae virtual environment
 ```
 python3 -m venv venv

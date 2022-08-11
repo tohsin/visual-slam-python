@@ -49,7 +49,7 @@ def compute_jacobian(error, pose_Tj):
     adj_ = compute_adj_lie_algebra(T = mat_inv)
     _jacobianOplusXi = -J @ adj_
     _jacobianOplusXj = J @ adj_
-    return _jacobianOplusXi , _jacobianOplusXj
+    return _jacobianOplusXi, _jacobianOplusXj
 
 
 def update_pose(pose , dx):
@@ -162,8 +162,8 @@ def GaussNetwonPoseGraph(vertices : List[Vertex] = list() , edges : List[Edges] 
                 
         dim_v = num_nodes * 6
         H = scipy.sparse.csc_matrix((dim_v ,dim_v))
-
         b = scipy.sparse.csc_matrix((dim_v, 1))
+        cost = 0
     
         for edge in edges:
             index_i , index_j = edge.getIDS()
@@ -171,9 +171,11 @@ def GaussNetwonPoseGraph(vertices : List[Vertex] = list() , edges : List[Edges] 
             measurment_T_ij = edge.measurement
             error = compute_error(pose_Ti = vertex_i.pose, pose_Tj = vertex_j.pose , measurment_Ti_Tj = measurment_T_ij)
             # consider impliment robust kernel here
+         
             
-            jacobian_xi, jacobian_xj =  compute_jacobian(error=error, pose_Tj=vertex_j.pose)  
+            jacobian_xi, jacobian_xj =  compute_jacobian(error=error, pose_Tj=vertex_j.pose)    
             omega = edge.information_mat
+            cost += error.T @ omega  @ error
             H_ii = jacobian_xi.T @ omega @ jacobian_xi
             H_ij = jacobian_xi.T @ omega @ jacobian_xj
             H_jj = jacobian_xj.T @ omega @ jacobian_xj
@@ -189,10 +191,10 @@ def GaussNetwonPoseGraph(vertices : List[Vertex] = list() , edges : List[Edges] 
 
             b[id2index(index_i,num_params)] += b_i.reshape(6,1)
             b[id2index(index_j,num_params)] += b_j.reshape(6,1)
-           
+        
             
 
-        H[:num_params, :num_params] += np.eye(6)
+        H[:num_params, :num_params] += np.eye(6) # fix the first node
         dx = scipy.sparse.linalg.spsolve(H ,b) # solver to solve linear equation
         dx[np.isnan(dx)] = 0 # remove very small values or none
         dx = np.reshape(dx, (len(vertices), num_params))
@@ -200,27 +202,18 @@ def GaussNetwonPoseGraph(vertices : List[Vertex] = list() , edges : List[Edges] 
         # update poses
         dx_change = 0
         for value_id, update in enumerate(dx):
-            dx_change_value = (update).mean(axis=0)
-            dx_change += abs(dx_change_value)
-            old_pose = vertices[value_id].pose
-            new_pose = update_pose(pose = old_pose, dx = update)
-            vertices[value_id].pose = new_pose
-        
+         
+                # dx_change_value = (update).mean(axis=0)
+                # dx_change += abs(dx_change_value)
+                old_pose = vertices[value_id].pose
+                new_pose = update_pose(pose = old_pose, dx = update)
+                vertices[value_id].pose = new_pose
+            
 
-        mean_error = 0
-        for edge in edges:
-        
-            index_i , index_j = edge.getIDS()
-            vertex_i , vertex_j = vertices[index_i] , vertices[index_j]
-            measurment_T_ij = edge.measurement
-            error = compute_error(pose_Ti = vertex_i.pose, pose_Tj = vertex_j.pose , measurment_Ti_Tj = measurment_T_ij)
-            error_mean = (error).mean(axis=0)
-            mean_error += abs(error_mean)
-        mean_error /= len(edges)
-
+        print(0.5*cost)
         # check if we converged
-        print("update_mean", dx_change)
-        print("mean error", mean_error)
+        # print("update_mean", dx_change)
+        # print("mean error", mean_error)
     
     #compute error
 

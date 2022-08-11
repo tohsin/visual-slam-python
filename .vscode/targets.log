@@ -10,12 +10,13 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 make: *** No rule to make target `all'.  Stop.
 
 
-# Make data base, printed on Fri Aug  5 16:23:19 2022
+# Make data base, printed on Wed Aug 10 22:44:09 2022
 
 # Variables
 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
+ 
 # automatic
 ?F = $(notdir $?)
 # automatic
@@ -41,17 +42,15 @@ VSCODE_CWD = /
 # environment
 PATH = /usr/local/sbin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/Cellar/pyenv-virtualenv/1.1.5/shims:/Users/emma/.pyenv/shims:/Library/Frameworks/Python.framework/Versions/3.9/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Library/Apple/usr/bin
 # environment
-LaunchInstanceID = 3AA32817-231D-40FD-96BE-FC0935B16BE2
-# environment
 ELECTRON_RUN_AS_NODE = 1
 # default
 .FEATURES := target-specific order-only second-expansion else-if archives jobserver check-symlink
 # environment
-SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.XuPB5vgQ1P/Listeners
+SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.T38rWqeqTt/Listeners
 # automatic
 %F = $(notdir $%)
 # environment
-DISPLAY = /private/tmp/com.apple.launchd.7qnyW8Irp8/org.xquartz:0
+DISPLAY = /private/tmp/com.apple.launchd.dGVrzoZibI/org.xquartz:0
 # environment
 PWD = /Users/emma/dev/visual-slam-python
 # environment
@@ -65,7 +64,7 @@ HOME = /Users/emma
 # default
 MAKEFILEPATH := /Applications/Xcode.app/Contents/Developer/Makefiles
 # environment
-VSCODE_CODE_CACHE_PATH = /Users/emma/Library/Application Support/Code/CachedData/3b889b090b5ad5793f524b5d1d39fda662b96a2a
+VSCODE_CODE_CACHE_PATH = /Users/emma/Library/Application Support/Code/CachedData/da76f93349a72022ca4670c1b84860304616aaa2
 # environment
 LOGNAME = emma
 # environment
@@ -99,17 +98,18 @@ TMPDIR = /var/folders/2f/sm6c6lzd6z75rjm6cfkdc4bw0000gn/T/
 # automatic
 *F = $(notdir $*)
 # environment
-VSCODE_IPC_HOOK = /Users/emma/Library/Application Support/Code/1.69.2-main.sock
+VSCODE_IPC_HOOK = /Users/emma/Library/Application Support/Code/1.70.0-main.sock
 # environment
 MallocNanoZone = 0
 # makefile
 MAKEFLAGS = Rrqp
 # environment
+ 
 MFLAGS = -Rrqp
 # automatic
 *D = $(patsubst %/,%,$(dir $*))
 # environment
-XPC_SERVICE_NAME = application.com.microsoft.VSCode.8020119.8020125
+XPC_SERVICE_NAME = application.com.microsoft.VSCode.8732976.8732982
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # automatic
@@ -124,8 +124,6 @@ MAKEFILES :=
 <F = $(notdir $<)
 # environment
 LC_ALL = C
-# environment
-SECURITYSESSIONID = 186a3
 # automatic
 ^F = $(notdir $^)
 # default
@@ -139,9 +137,9 @@ MAKELEVEL := 0
 # environment
 LANG = C
 # environment
-VSCODE_PID = 400
+VSCODE_PID = 1683
 # variable set hash-table stats:
-# Load=63/1024=6%, Rehash=0, Collisions=1/84=1%
+# Load=61/1024=6%, Rehash=0, Collisions=1/82=1%
 
 # Pattern-specific Variable Values
 
@@ -149,9 +147,9 @@ VSCODE_PID = 400
 
 # Directories
 
-# . (device 16777220, inode 8592980): 16 files, no impossibilities.
+# . (device 16777220, inode 8592980): 17 files, no impossibilities.
 
-# 16 files, no impossibilities in 1 directories.
+# 17 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -181,6 +179,7 @@ Makefile:
 #  File does not exist.
 #  File has been updated.
 #  Failed to be updated.
+ 
 # variable set hash-table stats:
 # Load=0/32=0%, Rehash=0, Collisions=0/0=0%
 
@@ -223,6 +222,6 @@ GNUmakefile:
 # strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
 # strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
 
-# Finished Make data base on Fri Aug  5 16:23:19 2022
+# Finished Make data base on Wed Aug 10 22:44:09 2022
 
  
