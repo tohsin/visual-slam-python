@@ -128,9 +128,9 @@ if __name__ == '__main__':
     print("translation vector",vector_translation )
     print(vector_rotation.shape)
    
-    R =cv.Rodrigues(vector_rotation)
+    R = cv.Rodrigues(vector_rotation)
   
     print("R from rodrigues", R)
 
     # coputing bundle adjustent
-    bundleAdjustmentGaussNewton(pts_3d_np, pts_2d_np, K)
+    BundleAdjustment(pts_3d_np, pts_2d_np, K)

@@ -10,19 +10,19 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 make: *** No rule to make target `all'.  Stop.
 
 
-# Make data base, printed on Wed Aug 10 22:44:09 2022
+# Make data base, printed on Fri Aug 12 15:36:21 2022
 
 # Variables
 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
- 
 # automatic
 ?F = $(notdir $?)
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # automatic
 @D = $(patsubst %/,%,$(dir $@))
+ 
 # automatic
 @F = $(notdir $@)
 # makefile
@@ -40,25 +40,25 @@ __CFBundleIdentifier = com.microsoft.VSCode
 # environment
 VSCODE_CWD = /
 # environment
-PATH = /usr/local/sbin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/Cellar/pyenv-virtualenv/1.1.5/shims:/Users/emma/.pyenv/shims:/Library/Frameworks/Python.framework/Versions/3.9/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Library/Apple/usr/bin
+PATH = /usr/bin:/bin:/usr/sbin:/sbin
+# environment
+LaunchInstanceID = 5F5F6379-C6A3-4BC8-9690-C14A1E8D2618
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # default
 .FEATURES := target-specific order-only second-expansion else-if archives jobserver check-symlink
 # environment
-SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.T38rWqeqTt/Listeners
+SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.E6BTtSvykS/Listeners
 # automatic
 %F = $(notdir $%)
 # environment
-DISPLAY = /private/tmp/com.apple.launchd.dGVrzoZibI/org.xquartz:0
+DISPLAY = /private/tmp/com.apple.launchd.812H3gJi1G/org.xquartz:0
 # environment
 PWD = /Users/emma/dev/visual-slam-python
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = undefined
 # environment
 VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
-# environment
-PYENV_SHELL = zsh
 # environment
 HOME = /Users/emma
 # default
@@ -104,7 +104,6 @@ MallocNanoZone = 0
 # makefile
 MAKEFLAGS = Rrqp
 # environment
- 
 MFLAGS = -Rrqp
 # automatic
 *D = $(patsubst %/,%,$(dir $*))
@@ -124,12 +123,13 @@ MAKEFILES :=
 <F = $(notdir $<)
 # environment
 LC_ALL = C
+# environment
+SECURITYSESSIONID = 186a4
+ 
 # automatic
 ^F = $(notdir $^)
 # default
 SUFFIXES := 
-# environment
-PYENV_VIRTUALENV_INIT = 1
 # default
 .INCLUDE_DIRS = /usr/local/include
 # environment
@@ -137,7 +137,7 @@ MAKELEVEL := 0
 # environment
 LANG = C
 # environment
-VSCODE_PID = 1683
+VSCODE_PID = 395
 # variable set hash-table stats:
 # Load=61/1024=6%, Rehash=0, Collisions=1/82=1%
 
@@ -147,9 +147,9 @@ VSCODE_PID = 1683
 
 # Directories
 
-# . (device 16777220, inode 8592980): 17 files, no impossibilities.
+# . (device 16777220, inode 8592980): 18 files, no impossibilities.
 
-# 17 files, no impossibilities in 1 directories.
+# 18 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -179,7 +179,6 @@ Makefile:
 #  File does not exist.
 #  File has been updated.
 #  Failed to be updated.
- 
 # variable set hash-table stats:
 # Load=0/32=0%, Rehash=0, Collisions=0/0=0%
 
@@ -212,6 +211,7 @@ GNUmakefile:
 # files hash-table stats:
 # Load=6/1024=1%, Rehash=0, Collisions=0/17=0%
 # VPATH Search Paths
+ 
 
 # No `vpath' search paths.
 
@@ -222,6 +222,6 @@ GNUmakefile:
 # strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
 # strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
 
-# Finished Make data base on Wed Aug 10 22:44:09 2022
+# Finished Make data base on Fri Aug 12 15:36:21 2022
 
  
