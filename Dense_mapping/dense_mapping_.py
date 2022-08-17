@@ -22,10 +22,12 @@ The data set is from monocular camera under known tracjectory
 
 # declare cosnants
 
+from os import X_OK
 from typing import List
 import cv2 as cv
 import sophus as sp
 import numpy as np
+import math
 
 BOARDER = 20
 WIDTH = 640
@@ -105,7 +107,36 @@ def epipolar_search(ref: cv.Mat, curr : cv.Mat, T_C_R : sp.SE3(),
             px_curr = pixel_mean_curr +1 * epipolar_direction 
 
 
-def NCC(ref : cv.Mat, curr : cv.Mat, pt_ref, pt_curr):
+def getBilinearInterpolatedValue(img : cv.Mat , pt ):
+    '''
+    best explanation first read wikipedia
+    you have four pointa surrounding x,y 
+    (x,y)             (x+1, y)
+
+
+             (x_o, y_o)
+
+    (x,y+)             (x+1, y+1)
+    and you want to use the four values around
+    x_o , y_o to estimate
+    a is the distance from x,y to x_o ,y_o in x axis
+    and same for b.
+    if 
+
+    '''
+    x = pt[0]
+    y = pt[1]
+    x_prime = math.floor(x)
+    y_prime = math.floor(y)
+    b = y - y_prime#y
+    a = x - x_prime
+    return  (( (1-a)*(1-b) * img[y_prime][x_prime]) +\
+            ((1-a) *  b * (img[y_prime+1][x_prime])) +\
+            (a * (1-b)* img[y_prime][x_prime+1]) +\
+            (a * b * img[y_prime+1][x_prime+1]))/255.0
+
+
+def NCC(ref_image : cv.Mat, curr_image : cv.Mat, pt_ref, pt_curr):
     '''
     parameters:
         pt_ref  : refrence point u,v
@@ -116,15 +147,23 @@ def NCC(ref : cv.Mat, curr : cv.Mat, pt_ref, pt_curr):
     mean_curr = 0
     values_ref = []
     values_curr = []
-    for  x in range(-NCC_WINDOW_SIZE, NCC_WINDOW_SIZE+1, 1 ):
-        for y in range(-NCC_WINDOW_SIZE, NCC_WINDOW_SIZE+1 ,1):
-            value_ref = ref[ int(y + pt_ref[1]) ][ int(x + pt_ref[0]) ] /255.0
+    for  x in range(-NCC_WINDOW_SIZE, NCC_WINDOW_SIZE + 1, 1 ):
+        for y in range(-NCC_WINDOW_SIZE, NCC_WINDOW_SIZE + 1 ,1):
+            value_ref = ref_image[ int(y + pt_ref[1]) ][ int(x + pt_ref[0]) ] /255.0
+
             mean_ref += value_ref
-            value_curr = get
 
+            value_curr = getBilinearInterpolatedValue(curr_image, np.add(pt_curr, np.array([x,y])))
 
-def getBilinearInterpolatedValue()
+            mean_curr += value_curr
 
+            values_ref.append(value_ref)
+            values_curr.append(value_curr)
+
+    mean_ref /= NCC_AREA
+    mean_curr /= NCC_AREA
+
+    # compute Zero mean NCC
 
 def update(ref: cv.Mat, curr : cv.Mat, T_C_R : sp.SE3(), depth : cv.Mat,
                      depth_conv2 :cv.Mat):
@@ -136,9 +175,16 @@ def update(ref: cv.Mat, curr : cv.Mat, T_C_R : sp.SE3(), depth : cv.Mat,
         depth : mean of depth mu
         deptH_conv2 : covariance of depth or std
     '''
-    for x in range(BOARDER, WIDTH-BOARDER, 1):
-        for y in range(BOARDER, WIDTH-BOARDER, 1):
+    for x in range(BOARDER, WIDTH - BOARDER, 1):
+        for y in range(BOARDER, WIDTH - BOARDER, 1):
+
             if depth_conv2[y][x] < MIN_CONV or depth_conv2 > MAX_CONV:
                 # algorithm has converged or abort
                 continue
             
+            
+
+if __name__=="__main__":
+    dummy_image = "/Users/emma/dev/visual-slam-python/Dense_mapping/test_data/images/scene_000.png"
+    dummy_image = cv.imread(dummy_image, cv.IMREAD_COLOR )
+    x = dummy_image.step

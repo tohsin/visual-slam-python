@@ -1,4 +1,4 @@
-# Visual Python (Concepts and Implimentation and Prototyping)
+# Visual Python (Concepts, Implimentation and Prototyping)
 This repo contains several concepts and implimentations of computer vision and visual slam algorithms for rapid prototyping for reserachers to test concepts.
 
 Some implientations are done with g2o for optimisatiion or Gauss newton non linear solver
