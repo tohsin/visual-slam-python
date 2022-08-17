@@ -67,17 +67,22 @@ def epipolar_search(ref: cv.Mat, curr : cv.Mat, T_C_R : sp.SE3(),
         pt_curr : List, epipolar_direction : List):
         '''
         Parameters
-        pt_ref : point in refrence
+            pt_ref : point in refrence
+        returns 
+            epipoloar_direction
         '''
-
-        f_ref = px2cam(pt_ref) #3d vector X,Y,Z
+        # conver point in refrencnce or pixel to 3d Space X, Y, Z
+        f_ref = px2cam(pt_ref) #3d vector X,Y,Z 
         # normalise vector
         f_ref = f_ref / np.sqrt(np.sum(f_ref **2 ))
         P_ref = f_ref * depth_mu # refrecne vector
 
+        #we then perform R and t on the 3d point and convert the to pixel to get equivalent after motion
         pixel_mean_curr = cam2px(T_C_R * P_ref) #pixel according to mean depth
 
-        d_min = depth_mu - 3 * depth_cov
+        #using raduis of mu +- 3sigma as radiius to get the estimate
+        # depth_mu was mean value so we get the max and min from that using 3 as max or min std
+        d_min = depth_mu - 3 * depth_cov 
         d_max = depth_mu + 3 * depth_cov
         if d_min < 0.1:
             d_min = 0.1
@@ -85,11 +90,40 @@ def epipolar_search(ref: cv.Mat, curr : cv.Mat, T_C_R : sp.SE3(),
         pixel_min_curr =  cam2px(T_C_R * ( f_ref * d_min )) # pixel of minimal depth
         pixel_max_curr =  cam2px(T_C_R * ( f_ref * d_max )) # pixel of minimal depth
 
+        epipolar_line = pixel_max_curr - pixel_min_curr # epiploar line obtained from max and min
+        epipolar_direction = epipolar_line
+        epipolar_direction = epipolar_direction  / np.sqrt(np.sum(epipolar_direction **2 ))
+        half_length = 0.5 * epipolar_line.norm()
+
+        if half_length>100:
+            half_length = 100
+        
+        #epipolar search
+        best_ncc = -1.0
+        best_px_curr = None
+        for l in range(-half_length, half_length, 0.7):
+            px_curr = pixel_mean_curr +1 * epipolar_direction 
 
 
+def NCC(ref : cv.Mat, curr : cv.Mat, pt_ref, pt_curr):
+    '''
+    parameters:
+        pt_ref  : refrence point u,v
+        pt_curr : current point on image u,v
+
+    '''
+    mean_ref = 0
+    mean_curr = 0
+    values_ref = []
+    values_curr = []
+    for  x in range(-NCC_WINDOW_SIZE, NCC_WINDOW_SIZE+1, 1 ):
+        for y in range(-NCC_WINDOW_SIZE, NCC_WINDOW_SIZE+1 ,1):
+            value_ref = ref[ int(y + pt_ref[1]) ][ int(x + pt_ref[0]) ] /255.0
+            mean_ref += value_ref
+            value_curr = get
 
 
-
+def getBilinearInterpolatedValue()
 
 
 def update(ref: cv.Mat, curr : cv.Mat, T_C_R : sp.SE3(), depth : cv.Mat,
