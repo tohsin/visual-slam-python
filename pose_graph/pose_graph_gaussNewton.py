@@ -171,7 +171,6 @@ def GaussNetwonPoseGraph(vertices : List[Vertex] = list() , edges : List[Edges] 
             measurment_T_ij = edge.measurement
             error = compute_error(pose_Ti = vertex_i.pose, pose_Tj = vertex_j.pose , measurment_Ti_Tj = measurment_T_ij)
             # consider impliment robust kernel here
-            
             jacobian_xi, jacobian_xj =  compute_jacobian(error=error, pose_Tj=vertex_j.pose)  
             omega = edge.information_mat
             H_ii = jacobian_xi.T @ omega @ jacobian_xi
@@ -193,7 +192,7 @@ def GaussNetwonPoseGraph(vertices : List[Vertex] = list() , edges : List[Edges] 
             
 
         H[:num_params, :num_params] += np.eye(6)
-        dx = scipy.sparse.linalg.spsolve(H ,b) # solver to solve linear equation
+        dx = scipy.sparse.linalg.spsolve(H, -b) # solver to solve linear equation
         dx[np.isnan(dx)] = 0 # remove very small values or none
         dx = np.reshape(dx, (len(vertices), num_params))
 
@@ -209,7 +208,6 @@ def GaussNetwonPoseGraph(vertices : List[Vertex] = list() , edges : List[Edges] 
 
         mean_error = 0
         for edge in edges:
-        
             index_i , index_j = edge.getIDS()
             vertex_i , vertex_j = vertices[index_i] , vertices[index_j]
             measurment_T_ij = edge.measurement

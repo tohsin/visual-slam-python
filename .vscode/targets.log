@@ -7,7 +7,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 
 # This program built for i386-apple-darwin11.3.0
 
-# Make data base, printed on Wed Aug 17 13:12:42 2022
+# Make data base, printed on Tue Aug 23 19:41:27 2022
 
 # Variables
 
@@ -36,27 +36,25 @@ __CFBundleIdentifier = com.microsoft.VSCode
 # environment
 VSCODE_CWD = /
 # environment
-PATH = /Users/emma/.pyenv/shims:/Users/emma/opt/miniconda3/bin:/Users/emma/opt/miniconda3/condabin:/usr/local/sbin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/Cellar/pyenv-virtualenv/1.1.5/shims:/Library/Frameworks/Python.framework/Versions/3.9/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Library/Apple/usr/bin
+PATH = /usr/bin:/bin:/usr/sbin:/sbin
+# environment
+LaunchInstanceID = C6138C1A-9310-4593-A89A-AE2DBB16D57F
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # default
 .FEATURES := target-specific order-only second-expansion else-if archives jobserver check-symlink
 # environment
-SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.E6BTtSvykS/Listeners
+SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.UaNKHUlU69/Listeners
 # automatic
 %F = $(notdir $%)
 # environment
-DISPLAY = /private/tmp/com.apple.launchd.812H3gJi1G/org.xquartz:0
-# environment
-CONDA_EXE = /Users/emma/opt/miniconda3/bin/conda
+DISPLAY = /private/tmp/com.apple.launchd.vPO31jZ7Ka/org.xquartz:0
 # environment
 PWD = /Users/emma/dev/visual-slam-python
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = undefined
 # environment
 VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
-# environment
-PYENV_SHELL = zsh
 # environment
 HOME = /Users/emma
 # default
@@ -68,13 +66,9 @@ LOGNAME = emma
 # environment
 APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
 # environment
-CONDA_PROMPT_MODIFIER = (base) 
-# environment
 VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # automatic
 ^D = $(patsubst %/,%,$(dir $^))
-# environment
-CONDA_DEFAULT_ENV = base
 # environment
 XPC_FLAGS = 0x0
 # default
@@ -91,8 +85,6 @@ USER = emma
 .DEFAULT_GOAL := 
 # automatic
 %D = $(patsubst %/,%,$(dir $%))
-# environment
-CONDA_SHLVL = 1
 # default
 MAKE_COMMAND := /Applications/Xcode.app/Contents/Developer/usr/bin/make
 # default
@@ -128,29 +120,21 @@ MAKEFILES :=
 # environment
 LC_ALL = C
 # environment
-CONDA_PYTHON_EXE = /Users/emma/opt/miniconda3/bin/python
+SECURITYSESSIONID = 186a5
 # automatic
 ^F = $(notdir $^)
 # default
 SUFFIXES := 
-# environment
-_CE_M = 
-# environment
-PYENV_VIRTUALENV_INIT = 1
 # default
 .INCLUDE_DIRS = /usr/local/include
 # environment
 MAKELEVEL := 0
 # environment
-CONDA_PREFIX = /Users/emma/opt/miniconda3
-# environment
-VSCODE_PID = 81302
-# environment
-_CE_CONDA = 
-# environment
 LANG = C
+# environment
+VSCODE_PID = 411
 # variable set hash-table stats:
-# Load=69/1024=7%, Rehash=0, Collisions=2/90=2%
+# Load=61/1024=6%, Rehash=0, Collisions=1/82=1%
 
 # Pattern-specific Variable Values
 
@@ -158,9 +142,9 @@ LANG = C
 
 # Directories
 
-# . (device 16777220, inode 8592980): 19 files, no impossibilities.
+# . (device 16777225, inode 8592980): 20 files, no impossibilities.
 
-# 19 files, no impossibilities in 1 directories.
+# 20 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -232,7 +216,7 @@ GNUmakefile:
 # strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
 # strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
 
-# Finished Make data base on Wed Aug 17 13:12:42 2022
+# Finished Make data base on Tue Aug 23 19:41:27 2022
 
  
 make: *** No rule to make target `all'.  Stop.

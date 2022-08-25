@@ -207,8 +207,7 @@ if __name__ == '__main__':
     keypoints_2 = []
     matches = []
     matches , keypoints_1, keypoints_2 = fm.find_feature_matches(image1, image2)
-
-
+    
     depth_image = cv.imread(image3_path, cv.IMREAD_UNCHANGED)
     print("depth image shape", depth_image.shape)
     K = [[ 520.9, 0, 325.1], \

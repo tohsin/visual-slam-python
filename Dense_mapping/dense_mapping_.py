@@ -23,11 +23,16 @@ The data set is from monocular camera under known tracjectory
 # declare cosnants
 
 from os import X_OK
+from tkinter import Widget
+from turtle import width
 from typing import List
+from xmlrpc.client import Boolean
 import cv2 as cv
 import sophus as sp
 import numpy as np
 import math
+import os
+from numpy.linalg import norm
 
 BOARDER = 20
 WIDTH = 640
@@ -63,49 +68,10 @@ def cam2px(p_cam):
     '''
     return  np.array([(p_cam[0] * FX / p_cam[2]) + CX, (p_cam[1] * FY / p_cam[2]) + CY])
 
+def inside(pt):
 
-def epipolar_search(ref: cv.Mat, curr : cv.Mat, T_C_R : sp.SE3(),
-        pt_ref : List, depth_mu : float, depth_cov : float,
-        pt_curr : List, epipolar_direction : List):
-        '''
-        Parameters
-            pt_ref : point in refrence
-        returns 
-            epipoloar_direction
-        '''
-        # conver point in refrencnce or pixel to 3d Space X, Y, Z
-        f_ref = px2cam(pt_ref) #3d vector X,Y,Z 
-        # normalise vector
-        f_ref = f_ref / np.sqrt(np.sum(f_ref **2 ))
-        P_ref = f_ref * depth_mu # refrecne vector
-
-        #we then perform R and t on the 3d point and convert the to pixel to get equivalent after motion
-        pixel_mean_curr = cam2px(T_C_R * P_ref) #pixel according to mean depth
-
-        #using raduis of mu +- 3sigma as radiius to get the estimate
-        # depth_mu was mean value so we get the max and min from that using 3 as max or min std
-        d_min = depth_mu - 3 * depth_cov 
-        d_max = depth_mu + 3 * depth_cov
-        if d_min < 0.1:
-            d_min = 0.1
-
-        pixel_min_curr =  cam2px(T_C_R * ( f_ref * d_min )) # pixel of minimal depth
-        pixel_max_curr =  cam2px(T_C_R * ( f_ref * d_max )) # pixel of minimal depth
-
-        epipolar_line = pixel_max_curr - pixel_min_curr # epiploar line obtained from max and min
-        epipolar_direction = epipolar_line
-        epipolar_direction = epipolar_direction  / np.sqrt(np.sum(epipolar_direction **2 ))
-        half_length = 0.5 * epipolar_line.norm()
-
-        if half_length>100:
-            half_length = 100
-        
-        #epipolar search
-        best_ncc = -1.0
-        best_px_curr = None
-        for l in range(-half_length, half_length, 0.7):
-            px_curr = pixel_mean_curr +1 * epipolar_direction 
-
+    return pt[0] >= BOARDER and pt[1] >= BOARDER and\
+        pt[0] + BOARDER < WIDTH and pt[1]+BOARDER <= HEIGHT 
 
 def getBilinearInterpolatedValue(img : cv.Mat , pt ):
     '''
@@ -136,6 +102,7 @@ def getBilinearInterpolatedValue(img : cv.Mat , pt ):
             (a * b * img[y_prime+1][x_prime+1]))/255.0
 
 
+
 def NCC(ref_image : cv.Mat, curr_image : cv.Mat, pt_ref, pt_curr):
     '''
     parameters:
@@ -164,9 +131,148 @@ def NCC(ref_image : cv.Mat, curr_image : cv.Mat, pt_ref, pt_curr):
     mean_curr /= NCC_AREA
 
     # compute Zero mean NCC
+    '''
+    E stands for sigma
+    NCC(A,B) = E_i_j (A_i_j - A_i_j_bar) (B_i_j-B_i_j_bar) / SQRT(E(A_i_j - A_i_J_bar)**2 E(B_i_j - B_i_j_bar)**2)
 
-def update(ref: cv.Mat, curr : cv.Mat, T_C_R : sp.SE3(), depth : cv.Mat,
-                     depth_conv2 :cv.Mat):
+    '''
+    numerator, denominator1, denominator2 = 0, 0, 0
+    for i in range(len(values_ref)):
+        numerator += (values_ref[i] - mean_ref) * (values_curr[i]- mean_curr) 
+    
+        denominator1 +=  (values_ref[i]- mean_ref) **2
+      
+        denominator2 += (values_curr[i] - mean_curr) **2
+        
+    return numerator / math.sqrt(denominator1 * denominator2 + 1e-10)
+
+def epipolar_search(
+        ref_image: cv.Mat, 
+        curr_image : cv.Mat,
+        T_C_R : sp.SE3(),
+        pt_ref : List, 
+        depth_mu : float, 
+        depth_cov : float,
+        pt_curr : List, 
+        epipolar_direction = np.zeros((2,1))):
+        '''
+        Parameters
+            pt_ref : point in refrence
+        returns 
+            epipoloar_direction
+        '''
+        # conver point in refrencnce or pixel to 3d Space X, Y, Z
+        f_ref = px2cam(pt_ref) #3d vector X,Y,Z 
+        # normalise vector
+        f_ref = f_ref / np.sqrt(np.sum(f_ref **2 ))
+        P_ref = f_ref * depth_mu # refrecne vector
+
+        #we then perform R and t on the 3d point and convert the to pixel to get equivalent after motion
+        pixel_mean_curr = cam2px(T_C_R * P_ref) #pixel according to mean depth
+
+        #using raduis of mu +- 3sigma as radiius to get the estimate
+        # depth_mu was mean value so we get the max and min from that using 3 as max or min std
+        d_min = depth_mu - 3 * depth_cov 
+        d_max = depth_mu + 3 * depth_cov
+        if d_min < 0.1:
+            d_min = 0.1
+        # convert the min and max points on xyz to refrence image by using transformation T
+        pixel_min_curr =  cam2px(T_C_R * ( f_ref * d_min )) # pixel of minimal depth
+        pixel_max_curr =  cam2px(T_C_R * ( f_ref * d_max )) # pixel of minimal depth
+
+
+        # line goes from max to min vector subtraction magnitude
+        epipolar_line = pixel_max_curr - pixel_min_curr # epiploar line obtained from max and min
+        epipolar_direction = epipolar_line
+        epipolar_direction = epipolar_direction  / np.sqrt(np.sum(epipolar_direction **2 ))
+        half_length = 0.5 * norm(epipolar_line) #fix
+
+        if half_length>100:
+            half_length = 100
+        
+        #epipolar search for best ncc score
+        best_ncc = -1.0
+        best_px_curr = None
+        l = -half_length
+        while(l<=half_length):
+         # using a strp of .7 or sqrt 2
+            px_curr = pixel_mean_curr +l * epipolar_direction 
+
+            if not inside(px_curr):
+                l+= 0.7
+                continue
+               
+            # compute NCC score
+            ncc = NCC(ref_image=ref_image, curr_image=curr_image, pt_ref=pt_ref, pt_curr=px_curr)
+            if ncc >best_ncc:
+                best_ncc = ncc
+                best_px_curr = px_curr
+            l += 0.7
+        if best_ncc < 0.85:
+            return False , None, None
+        pt_curr = best_px_curr
+        return True, pt_curr, epipolar_direction
+
+def updateDepthFilter(pt_ref, pt_curr, T_C_R : sp.SE3(),
+                    epipolar_direction, depth: cv.Mat, depth_conv2 : cv.Mat):
+    
+    # triangulation
+    T_R_C =  T_C_R.inverse()
+    f_ref = px2cam(pt_ref) # 3D CORDINATES
+    f_ref = f_ref / np.sqrt(np.sum(f_ref **2 ))
+
+    f_curr = px2cam(pt_curr)
+    f_curr = f_curr / np.sqrt(np.sum(f_curr **2 ))
+
+    # equation
+    # d_ref * f_ref = d_cur * (R_R_C * f_cur) + t_RC
+    trans = T_R_C.translation()
+    f2 = T_R_C.rotationMatrix() @ f_curr
+    b = np.array([np.dot(trans, f_ref), np.dot(trans, f2)])
+    
+    A = np.zeros((2,2))
+    A[0][0] = np.dot(f_ref,f_ref)
+    A[0][1] = -np.dot(-f_ref,f2)
+    A[1][0] = -A[0][1]
+    A[1][1] = -np.dot(f2,f2)
+
+    ans = A @ b
+    xm = ans[0] * f_ref # results in ref
+    xn = trans + ans[1] * f2 # results in curr
+    p_esti = (xm +xn) /2
+    depth_estimation = norm(p_esti) # depth
+
+    # computer variance
+    p = f_ref * depth_estimation
+    a = p - trans
+    t_norm = norm(trans)
+    a_norm = norm(a)
+    alpha = np.arccos(np.dot(f_ref,trans)/t_norm)
+    beta = np.arccos(np.dot(-a, trans)/(a_norm*t_norm))
+    f_curr_prime = px2cam(pt_curr + epipolar_direction)
+    f_curr_prime = f_curr_prime / np.sqrt(np.sum(f_curr_prime **2 ))
+    beta_prime = np.arccos(np.dot(f_curr_prime, -trans) / t_norm)
+    gamma = np.pi - alpha - beta_prime
+    p_prime = t_norm * np.sin(beta_prime) /np.sin(gamma)
+    d_conv = p_prime - depth_estimation
+    d_conv2 = d_conv * d_conv
+
+    # Gaussian fusion
+    mu = depth[int(pt_ref[1])][int(pt_ref[0])] 
+    sigma2 = depth_conv2[int(pt_ref[1])][int(pt_ref[0])] 
+    mu_fuse = (d_conv2 * mu + sigma2 * depth_estimation) / (sigma2 + d_conv2)
+    sigma_fuse2 = (sigma2 * d_conv2) / (sigma2 + d_conv2)
+    depth[int(pt_ref[1])][int(pt_ref[0])]  = mu_fuse
+    depth_conv2[int(pt_ref[1])][int(pt_ref[0])]   = sigma_fuse2
+
+    return True , depth, depth_conv2
+
+def update(
+    ref_image: cv.Mat,
+    curr_image : cv.Mat,
+    T_C_R : sp.SE3(), 
+    depth : cv.Mat,
+    depth_conv2 :cv.Mat):
     '''
     Parameters
         refrence : refrence image
@@ -176,15 +282,146 @@ def update(ref: cv.Mat, curr : cv.Mat, T_C_R : sp.SE3(), depth : cv.Mat,
         deptH_conv2 : covariance of depth or std
     '''
     for x in range(BOARDER, WIDTH - BOARDER, 1):
-        for y in range(BOARDER, WIDTH - BOARDER, 1):
+        for y in range(BOARDER, HEIGHT - BOARDER, 1):
 
-            if depth_conv2[y][x] < MIN_CONV or depth_conv2 > MAX_CONV:
+            if depth_conv2[y][x] < MIN_CONV or depth_conv2[y][x] > MAX_CONV:
                 # algorithm has converged or abort
                 continue
-            
-            
+            pt_curr = np.array([0,0])
+            epipolar_direction = np.zeros([0,0])
+            ret, pt_curr, epipolar_direction = epipolar_search( ref_image=ref_image,\
+                                            curr_image=curr_image,\
+                                            pt_ref = np.array([x, y]),
+                                            T_C_R=T_C_R,\
+                                            depth_mu=depth[y][x],
+                                            depth_cov=depth_conv2[y][x],
+                                            pt_curr=pt_curr,
+                                            epipolar_direction=epipolar_direction)
 
+
+
+            if not ret:
+                continue
+            ret , depth, depth_conv2 = updateDepthFilter(np.array([x,y]), pt_curr=pt_curr,
+                                                        T_C_R=T_C_R,epipolar_direction=epipolar_direction,depth=depth,depth_conv2=depth_conv2)
+            return ret, depth, depth_conv2
+def covertQuantToRotatoion( x = 0.0 , y = 0.0 ,z =0.0 , s=0.0 ):
+    i_00 = 1 - 2*y*y - 2*z*z
+    i_01 = 2*x*y - 2*s*z
+    i_02 = (2*x*z) - (2*s*y)
+
+    i_10 = 2*x*y + 2*s*z
+    i_11 = 1 - (2*x*x) - (2*z*z)
+    i_12 = (2*y*z) - (2*s*x)
+
+    i_20 = (2*x*z) - (2*s*y)
+    i_21 = (2*y*z) + (2*s*x)
+    i_22 = 1 - (2*x*x) -(2*y*y)
+    rotation_matrix = [
+        [i_00, i_01, i_02],
+        [i_10, i_11, i_12],
+        [i_20, i_21, i_22]
+        ]
+    return np.array(rotation_matrix)
+
+def readData():
+    poses = []
+    base_dir = os.getcwd()
+    lines = []
+    frames_dir = base_dir + "/Dense_mapping/test_data/first_200_frames_traj_over_table_input_sequence.txt"
+    with open(frames_dir) as file:
+            lines = file.readlines()
+    poses = []
+    for line in lines:
+        datxa_ = line.split(" ")
+        z = datxa_[ 1 : len(datxa_)]
+        tx, ty, tz, qx, qy, qz, qw  = z
+        rot_mat = sp.to_orthogonal(covertQuantToRotatoion(float(qx),float(qy),float(qz),float(qw)))
+        trans_vec = np.array([float(tx), float(ty), float(tz)])
+        pose = sp.SE3(rot_mat, trans_vec)
+        poses.append(pose)
+    
+    camera_images = []
+    images_dir = base_dir + "/Dense_mapping/test_data/images/"
+    images_files = os.listdir(images_dir)
+    for file_name in images_files:
+        ac_file_name = images_dir + file_name 
+        camera_images.append( ac_file_name )
+    
+    camera_images.sort()
+
+    depth_dir = base_dir + "/Dense_mapping/test_data/depthmaps/scene_000.depth"
+    depth = []
+    with open(depth_dir) as file:
+            depth = file.readlines()
+    depth = depth[0].split(" ")
+    depth_ = []
+    for v in depth:
+        if len(v) != 0:
+            convert_ = float(v)
+            depth_.append(convert_)
+    
+    
+    idx = 0
+    ref_depth = np.zeros((HEIGHT, WIDTH))
+    for y in range(HEIGHT):
+        for x in range(WIDTH):
+            ref_depth[y][x] = depth_[idx] / 100
+            idx+=1
+ 
+    return poses, camera_images, ref_depth
+
+def evaluateDepth(depth_truth : cv.Mat, depth_estimate : cv.Mat):
+    ave_depth_error = 0
+    ave_depth_error_sq = 0
+    cnt_depth_data = 0
+    DM = depth_truth[0].size
+    for y  in range(BOARDER, len(depth_truth) - BOARDER, 1):
+        for x in range(BOARDER, depth_truth[0].size- BOARDER, 1):
+            error = depth_truth[y][x] - depth_estimate[y][x]
+            ave_depth_error += error
+            ave_depth_error_sq += error * error
+            cnt_depth_data +=1
+    ave_depth_error /= cnt_depth_data
+    ave_depth_error_sq /= cnt_depth_data
+
+    print("Average squared error: ", ave_depth_error_sq,", Average Error: ", ave_depth_error)
+
+def plotDepth(depth_truth : cv.Mat, depth_estimate : cv.Mat):
+    cv.imshow("depth Truth", depth_truth * 0.4)
+    cv.imshow("depth_etimate", depth_estimate * 0.4)
+    cv.imshow("depth_error", np.subtract(depth_truth, depth_estimate))
+    cv.waitKey(1)
+        
+    
 if __name__=="__main__":
-    dummy_image = "/Users/emma/dev/visual-slam-python/Dense_mapping/test_data/images/scene_000.png"
-    dummy_image = cv.imread(dummy_image, cv.IMREAD_COLOR )
-    x = dummy_image.step
+    poses_TWC, camera_images, ref_depth = readData()
+    ref = cv.imread(camera_images[0], 0)
+    pose_ref_TWC = poses_TWC[0]
+    init_depth = 3.0
+    init_conv2 = 3.0
+    depth = np.full((HEIGHT,WIDTH), init_depth)
+    depth_conv2 = np.full((HEIGHT,WIDTH), init_conv2)
+
+    for i in range(1, len(camera_images)):
+        print("Loop ", i,"*****")
+        curr = cv.imread(camera_images[i], 0)
+        pose_curr_TWC = poses_TWC[i]
+        # coordinate conversion relationship T_C_W * T_W_R = T_C_R
+        # 
+        poses_T_C_R = pose_curr_TWC.inverse() * pose_ref_TWC 
+        ret, depth_, depth_conv2_ = update(ref, curr,poses_T_C_R,depth,depth_conv2)
+        if ret:
+            depth = depth_
+            depth_conv2 = depth_conv2_
+        evaluateDepth(ref_depth , depth)
+        plotDepth(ref_depth, depth)
+        cv.imshow("image", curr)
+        cv.waitKey(1)
+    print("Done")
+    base_dir = os.getcwd()
+    store_path = base_dir + "/Dense_mapping/depth.png"
+    cv.imwrite(store_path, depth)
+    
+
+    
