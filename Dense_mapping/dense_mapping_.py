@@ -62,6 +62,9 @@ def cam2px(p_cam):
     ''' 
     parameters:
         p_cam : 3d vector u , v
+        u = K * P = fx 0  cx   * X
+        v           0  fy cy     y
+                    0   0  0     z
         u = X * FX / Z + cx
         v = Y * FY / Z + CY
     returns u , v
@@ -158,6 +161,7 @@ def epipolar_search(
         '''
         Parameters
             pt_ref : point in refrence
+            T_C_R : Transformation from refence to current
         returns 
             epipoloar_direction
         '''
@@ -165,6 +169,7 @@ def epipolar_search(
         f_ref = px2cam(pt_ref) #3d vector X,Y,Z 
         # normalise vector
         f_ref = f_ref / np.sqrt(np.sum(f_ref **2 ))
+        
         P_ref = f_ref * depth_mu # refrecne vector
 
         #we then perform R and t on the 3d point and convert the to pixel to get equivalent after motion
@@ -218,10 +223,11 @@ def updateDepthFilter(pt_ref, pt_curr, T_C_R : sp.SE3(),
     
     # triangulation
     T_R_C =  T_C_R.inverse()
-    f_ref = px2cam(pt_ref) # 3D CORDINATES
-    f_ref = f_ref / np.sqrt(np.sum(f_ref **2 ))
+    f_ref = px2cam(pt_ref) # 3D CORDINATES of refrence point
+    f_ref = f_ref / np.sqrt(np.sum(f_ref **2 )) # normalise refence point
 
-    f_curr = px2cam(pt_curr)
+    f_curr = px2cam(pt_curr) #3d coordinate current point
+    #normalise
     f_curr = f_curr / np.sqrt(np.sum(f_curr **2 ))
 
     # equation
@@ -305,6 +311,7 @@ def update(
             ret , depth, depth_conv2 = updateDepthFilter(np.array([x,y]), pt_curr=pt_curr,
                                                         T_C_R=T_C_R,epipolar_direction=epipolar_direction,depth=depth,depth_conv2=depth_conv2)
             return ret, depth, depth_conv2
+
 def covertQuantToRotatoion( x = 0.0 , y = 0.0 ,z =0.0 , s=0.0 ):
     i_00 = 1 - 2*y*y - 2*z*z
     i_01 = 2*x*y - 2*s*z
@@ -400,9 +407,11 @@ if __name__=="__main__":
     pose_ref_TWC = poses_TWC[0]
     init_depth = 3.0
     init_conv2 = 3.0
+    # intilaise depth maps and conv
     depth = np.full((HEIGHT,WIDTH), init_depth)
     depth_conv2 = np.full((HEIGHT,WIDTH), init_conv2)
 
+    # go through camera images
     for i in range(1, len(camera_images)):
         print("Loop ", i,"*****")
         curr = cv.imread(camera_images[i], 0)
