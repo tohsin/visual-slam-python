@@ -69,7 +69,8 @@ def cam2px(p_cam):
         v = Y * FY / Z + CY
     returns u , v
     '''
-    return  np.array([(p_cam[0] * FX / p_cam[2]) + CX, (p_cam[1] * FY / p_cam[2]) + CY])
+    return  np.array([(p_cam[0] * FX / p_cam[2]) + CX, 
+                        (p_cam[1] * FY / p_cam[2]) + CY])
 
 def inside(pt):
 
@@ -156,8 +157,8 @@ def epipolar_search(
         pt_ref : List, 
         depth_mu : float, 
         depth_cov : float,
-        pt_curr : List, 
-        epipolar_direction = np.zeros((2,1))):
+        pt_curr, 
+        epipolar_direction):
         '''
         Parameters
             pt_ref : point in refrence
@@ -199,69 +200,95 @@ def epipolar_search(
         best_ncc = -1.0
         best_px_curr = None
         l = -half_length
-        while(l<=half_length):
+        # while(l<=half_length):
+        for l in range(-half_length,half_length +1, 0.7):
          # using a strp of .7 or sqrt 2
-            px_curr = pixel_mean_curr +l * epipolar_direction 
+            px_curr = pixel_mean_curr + l * epipolar_direction  #point to be matched
 
             if not inside(px_curr):
-                l+= 0.7
                 continue
                
             # compute NCC score
             ncc = NCC(ref_image=ref_image, curr_image=curr_image, pt_ref=pt_ref, pt_curr=px_curr)
-            if ncc >best_ncc:
+            if ncc > best_ncc:
+                # update if better
                 best_ncc = ncc
                 best_px_curr = px_curr
-            l += 0.7
         if best_ncc < 0.85:
             return False , None, None
         pt_curr = best_px_curr
-        return True, pt_curr, epipolar_direction
+        return True
 
 def updateDepthFilter(pt_ref, pt_curr, T_C_R : sp.SE3(),
                     epipolar_direction, depth: cv.Mat, depth_conv2 : cv.Mat):
     
     # triangulation
-    T_R_C =  T_C_R.inverse()
-    f_ref = px2cam(pt_ref) # 3D CORDINATES of refrence point
-    f_ref = f_ref / np.sqrt(np.sum(f_ref **2 )) # normalise refence point
+    TransformationT_Ref_Curr =  T_C_R.inverse()
+    point_3d_ref = px2cam(pt_ref) # 3D CORDINATES of refrence point
+    point_3d_ref = point_3d_ref / np.sqrt(np.sum(point_3d_ref **2 )) # normalise refence point
 
-    f_curr = px2cam(pt_curr) #3d coordinate current point
+    point_3d_curr = px2cam(pt_curr) #3D coordinate current point
     #normalise
-    f_curr = f_curr / np.sqrt(np.sum(f_curr **2 ))
+    point_3d_curr = point_3d_curr / np.sqrt(np.sum(point_3d_curr **2 ))
 
     # equation
     # d_ref * f_ref = d_cur * (R_R_C * f_cur) + t_RC
-    trans = T_R_C.translation()
-    f2 = T_R_C.rotationMatrix() @ f_curr
-    b = np.array([np.dot(trans, f_ref), np.dot(trans, f2)])
+    # d_ref * f_ref = d_cur * f2 + t_RC
+    #f2 = (R_R_C * f_cur)
+    '''
+    Transform into the following matrix equations
+    // => [ f_ref^T f_ref, -f_ref^T f2 ] [d_ref]   [f_ref^T t]
+    //    [ f_2^T f_ref, -f2^T f2      ] [d_cur] = [f2^T t   ]
+     A a                 = b
+    '''
+    trans = TransformationT_Ref_Curr.translation()
+    f2 = TransformationT_Ref_Curr.rotationMatrix() @ point_3d_curr
+    b = np.array([np.dot(trans, point_3d_ref), np.dot(trans, f2)])
     
     A = np.zeros((2,2))
-    A[0][0] = np.dot(f_ref,f_ref)
-    A[0][1] = -np.dot(-f_ref,f2)
-    A[1][0] = -A[0][1]
-    A[1][1] = -np.dot(f2,f2)
+    A[0, 0] = np.dot(point_3d_ref, point_3d_ref)
+    A[0, 1] = -np.dot(-point_3d_ref, f2)
+    A[1, 0] = -A[0, 1]
+    A[1, 1] = -np.dot(f2,f2)
 
     ans = A @ b
-    xm = ans[0] * f_ref # results in ref
+    xm = ans[0] * point_3d_ref # results in ref
     xn = trans + ans[1] * f2 # results in curr
-    p_esti = (xm +xn) /2
+    p_esti = (xm +xn) /2  # compute avg
     depth_estimation = norm(p_esti) # depth
 
     # computer variance
-    p = f_ref * depth_estimation
+    '''
+    Calculate uncertainty (error in one pixel)
+    a = p - t
+
+    Perturbing p2 by one pixel will cause β to produce a change, 
+    which becomes β′. According to the geometric relationship, there are:
+
+    B` = arccos (O2-P2` , -t)
+    gamma = π - alpha- β′
+
+    p` = ||t|| * sin(B`) / sin(gamma)
+    depth conv = p` - p   p here is also depth estimate
+
+    '''
+    
+    p = point_3d_ref * depth_estimation
     a = p - trans
     t_norm = norm(trans)
     a_norm = norm(a)
-    alpha = np.arccos(np.dot(f_ref,trans)/t_norm)
-    beta = np.arccos(np.dot(-a, trans)/(a_norm*t_norm))
+    alpha = np.arccos(np.dot(point_3d_ref, trans)/t_norm)
+    beta = np.arccos(np.dot(-a, trans)/ (a_norm * t_norm))
+
     f_curr_prime = px2cam(pt_curr + epipolar_direction)
     f_curr_prime = f_curr_prime / np.sqrt(np.sum(f_curr_prime **2 ))
+
     beta_prime = np.arccos(np.dot(f_curr_prime, -trans) / t_norm)
-    gamma = np.pi - alpha - beta_prime
-    p_prime = t_norm * np.sin(beta_prime) /np.sin(gamma)
-    d_conv = p_prime - depth_estimation
-    d_conv2 = d_conv * d_conv
+
+    gamma = np.pi - alpha - beta_prime # gamma = π - alpha- β′
+    p_prime = t_norm * np.sin(beta_prime) /np.sin(gamma) #    p` = ||t|| * sin(B`) / sin(gamma)
+    d_conv = p_prime - depth_estimation #  depth conv = p` - p   p here is also depth estimate
+    d_conv2 = d_conv ** 2
 
     # Gaussian fusion
     mu = depth[int(pt_ref[1])][int(pt_ref[0])] 
@@ -295,7 +322,7 @@ def update(
                 continue
             pt_curr = np.array([0,0])
             epipolar_direction = np.zeros([0,0])
-            ret, pt_curr, epipolar_direction = epipolar_search( ref_image=ref_image,\
+            found_good_match : bool = epipolar_search( ref_image=ref_image,\
                                             curr_image=curr_image,\
                                             pt_ref = np.array([x, y]),
                                             T_C_R=T_C_R,\
@@ -306,11 +333,14 @@ def update(
 
 
 
-            if not ret:
+            if not found_good_match:
                 continue
-            ret , depth, depth_conv2 = updateDepthFilter(np.array([x,y]), pt_curr=pt_curr,
-                                                        T_C_R=T_C_R,epipolar_direction=epipolar_direction,depth=depth,depth_conv2=depth_conv2)
-            return ret, depth, depth_conv2
+            updateDepthFilter(pt_ref = np.array([x,y]), 
+                                pt_curr=pt_curr,
+                                T_C_R=T_C_R,
+                                epipolar_direction = epipolar_direction,
+                                depth=depth,
+                                depth_conv2=depth_conv2)
 
 def covertQuantToRotatoion( x = 0.0 , y = 0.0 ,z =0.0 , s=0.0 ):
     i_00 = 1 - 2*y*y - 2*z*z

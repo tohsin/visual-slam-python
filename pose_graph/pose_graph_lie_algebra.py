@@ -183,13 +183,12 @@ if __name__ == '__main__':
     for data_item in lines:
         # using first letter of string
         if data_item[0] == "V": # vertex
-
             #seperate words and values
             data_values = data_item.split(" ")
             # slicing to access values
             data_values = data_values[1:len(data_values)-1]
             id, tx, ty, tz, qx, qy, qz, qw  = data_values
-            vetrex_node = Vertex(int(id), float(tx), float(ty), float(tz), float(qx), float(qy), float(qz),float(qw) )
+            vetrex_node = Vertex(int(id), float(tx), float(ty), float(tz), float(qx), float(qy), float(qz),float(qw))
             vertices.append(vetrex_node)
         else:# edges
             data_values = data_item.split(" ")

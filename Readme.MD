@@ -9,7 +9,6 @@ For solutions done with Gauss newton code runs very slowly as using the c++/pyth
 ```
 python3 -m venv venv
 ```
-
 # G20 installation
 On my mac i had to change some things to get to work so eddited g2opy will be attached you can skip the 
 git clone
@@ -45,6 +44,7 @@ python setup.py install
 
 
 # Sophus py
+
 ```
 pip install sophuspy
 ```
